@@ -1,4 +1,20 @@
 version: 2
+
+test: &test
+  working_directory: ~/my-app
+  docker:
+    - image: circleci/node:12.16.1
+  steps:
+    - checkout
+
+    - run:
+        name: Installing dependencies
+        command: npm install
+
+    - run:
+        name: Test
+        command: npm test
+
 publish: &publish
   working_directory: ~/my-app
   docker:
@@ -18,21 +34,6 @@ publish: &publish
         name: Publish to Expo
         command: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $EXPO_RELEASE_CHANNEL
 
-test: &test
-  working_directory: ~/my-app
-  docker:
-    - image: circleci/node:12.16.1
-  steps:
-    - checkout
-
-    - run:
-        name: Installing dependencies
-        command: npm install
-
-    - run:
-        name: Test
-        command: npm test
-
 jobs:
   publish_to_expo_dev:
     environment:
@@ -51,12 +52,16 @@ workflows:
   version: 2
   my_app:
     jobs:
+      - run_tests
       - publish_to_expo_dev:
           filters:
             branches:
               only: develop
+          requires:
+            - run_tests
       - publish_to_expo_prod:
           filters:
             branches:
               only: master
-      - run_tests
+          requires:
+            - run_tests
