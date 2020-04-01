@@ -1,37 +1,34 @@
 version: 2
-publish: &publish
-  working_directory: ~/my-app
+
+container_setup: &container_setup
+  working_directory: ~/covid_tracker_react_native
   docker:
     - image: circleci/node:12.16.1
+
+test: &test
+  <<: *container_setup 
   steps:
     - checkout
-
     - run:
         name: Installing dependencies
-        command: npm install
+        command: npm install 
+    - run:
+        name: Run Unit Tests
+        command: npm test
 
+publish: &publish
+  <<: *container_setup
+  steps:
+    - checkout
+    - run:
+        name: Installing dependencies
+        command: npm install 
     - run:
         name: Login into Expo
         command: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
-
     - run:
         name: Publish to Expo
         command: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $EXPO_RELEASE_CHANNEL
-
-test: &test
-  working_directory: ~/my-app
-  docker:
-    - image: circleci/node:12.16.1
-  steps:
-    - checkout
-
-    - run:
-        name: Installing dependencies
-        command: npm install
-
-    - run:
-        name: Test
-        command: npm test
 
 jobs:
   publish_to_expo_dev:
@@ -49,14 +46,18 @@ jobs:
 
 workflows:
   version: 2
-  my_app:
+  covid_tracker_react_native:
     jobs:
+      - run_tests
       - publish_to_expo_dev:
           filters:
             branches:
               only: develop
+          requires:
+            - run_tests
       - publish_to_expo_prod:
           filters:
             branches:
               only: master
-      - run_tests
+          requires:
+            - run_tests
