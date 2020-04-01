@@ -5,17 +5,13 @@ container_setup: &container_setup
   docker:
     - image: circleci/node:12.16.1
 
-build_steps: &build_steps
+test: &test
+  <<: *container_setup 
   steps:
     - checkout
     - run:
         name: Installing dependencies
         command: npm install 
-
-test: &test
-  <<: *container_setup 
-  steps:
-    - <<: *build_steps
     - run:
         name: Run Unit Tests
         command: npm test
@@ -23,11 +19,13 @@ test: &test
 publish: &publish
   <<: *container_setup
   steps:
-    - <<: *build_steps
+    - checkout
+    - run:
+        name: Installing dependencies
+        command: npm install 
     - run:
         name: Login into Expo
         command: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
-
     - run:
         name: Publish to Expo
         command: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $EXPO_RELEASE_CHANNEL
