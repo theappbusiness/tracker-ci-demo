@@ -1,5 +1,5 @@
 version: 1
-job_setup: 
+job_setup: &job_setup
   working_directory: ~/covid_tracker_react_native
   docker:
     - image: circleci/node:12.16.1 
