@@ -1,31 +1,29 @@
 version: 2
-job_setup: &job_setup
+
+container_setup: &container_setup
   working_directory: ~/covid_tracker_react_native
   docker:
-    - image: circleci/node:12.16.1 
+    - image: circleci/node:12.16.1
 
-test: &test
-  <<: *job_setup 
+build_steps: &build_steps
   steps:
     - checkout
-
     - run:
         name: Installing dependencies
-        command: npm install
+        command: npm install 
 
+test: &test
+  <<: *container_setup 
+  steps:
+    <<: *build_steps
     - run:
-        name: Test
+        name: Run Unit Tests
         command: npm test
 
 publish: &publish
-  <<: *job_setup
+  <<: *container_setup
   steps:
-    - checkout
-
-    - run:
-        name: Installing dependencies
-        command: npm install
-
+    <<: *build_steps
     - run:
         name: Login into Expo
         command: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
