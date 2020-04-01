@@ -1,9 +1,11 @@
-version: 2
+version: 1
+job_setup: 
+  working_directory: ~/covid_tracker_react_native
+  docker:
+    - image: circleci/node:12.16.1 
 
 test: &test
-  working_directory: ~/my-app
-  docker:
-    - image: circleci/node:12.16.1
+  <<: *job_setup 
   steps:
     - checkout
 
@@ -16,9 +18,7 @@ test: &test
         command: npm test
 
 publish: &publish
-  working_directory: ~/my-app
-  docker:
-    - image: circleci/node:12.16.1
+  <<: *job_setup
   steps:
     - checkout
 
@@ -49,8 +49,8 @@ jobs:
     <<: *test
 
 workflows:
-  version: 2
-  my_app:
+  version: 1
+  covid_tracker_react_native:
     jobs:
       - run_tests
       - publish_to_expo_dev:
