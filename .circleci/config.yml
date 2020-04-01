@@ -1,4 +1,4 @@
-version: 1
+version: 2
 job_setup: &job_setup
   working_directory: ~/covid_tracker_react_native
   docker:
@@ -49,7 +49,7 @@ jobs:
     <<: *test
 
 workflows:
-  version: 1
+  version: 2
   covid_tracker_react_native:
     jobs:
       - run_tests
