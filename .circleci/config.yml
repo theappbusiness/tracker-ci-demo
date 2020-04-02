@@ -22,13 +22,18 @@ executors:
     docker:
       - image: circleci/node:10.16
 
+commands:
+  build:
+    steps:
+      - checkout
+      - run: npm install      
+
 jobs:
   build-and-test:
     executor: node
     working_directory: ~/covid-react
     steps:
-      - checkout
-      - run: npm install
+      - build
       - run: npm test
   publish_to_expo_dev:
     executor: node
@@ -38,8 +43,7 @@ jobs:
         description: Expo release channel
         type: string
     steps:
-      - checkout
-      - run: npm install
+      - build
       - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
       - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel << parameters.release_channel >>
 
