@@ -1,63 +1,63 @@
-version: 2
+version: 2.1
 
-container_setup: &container_setup
-  working_directory: ~/covid_tracker_react_native
-  docker:
-    - image: circleci/node:12.16.1
+master_filter: &master_filter
+  branches:
+    only: master
 
-test: &test
-  <<: *container_setup 
-  steps:
-    - checkout
-    - run:
-        name: Installing dependencies
-        command: npm install 
-    - run:
-        name: Run Unit Tests
-        command: npm test
+develop_filter: &develop_filter
+  branches:
+    only: develop
 
-publish: &publish
-  <<: *container_setup
-  steps:
-    - checkout
-    - run:
-        name: Installing dependencies
-        command: npm install 
-    - run:
-        name: Login into Expo
-        command: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
-    - run:
-        name: Publish to Expo
-        command: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $EXPO_RELEASE_CHANNEL
+feature_filter: &feature_filter
+  branches:
+    ignore:
+      - master
+      - develop
+orbs:
+  node: circleci/node@2.0.1
+  slack: circleci/slack@3.2.0
+
+executors:
+  node:
+    docker:
+      - image: circleci/node:10.16
 
 jobs:
+  build-and-test:
+    executor: node
+    working_directory: ~/covid-react
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm test
   publish_to_expo_dev:
-    environment:
-      EXPO_RELEASE_CHANNEL: dev
-    <<: *publish
-
-  publish_to_expo_prod:
-    environment:
-      EXPO_RELEASE_CHANNEL: default
-    <<: *publish
-
-  run_tests:
-    <<: *test
+    executor: node
+    working_directory: ~/covid-react
+    parameters:
+      release_channel:
+        description: Expo release channel
+        type: string
+    steps:
+      - checkout
+      - run: npm install
+      - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
+      - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel << parameters.release_channel >>
 
 workflows:
-  version: 2
-  covid_tracker_react_native:
+  build-and-test:
     jobs:
-      - run_tests
+      - build-and-test:
+          filters: *feature_filter
+  dev_deployment:
+    jobs:
+      - build-and-test:
+          filters: *develop_filter
       - publish_to_expo_dev:
-          filters:
-            branches:
-              only: develop
+          filters: *develop_filter
+          release_channel: dev
           requires:
-            - run_tests
-      - publish_to_expo_prod:
-          filters:
-            branches:
-              only: master
-          requires:
-            - run_tests
+            - build-and-test
+  master_deployment:
+    jobs:
+      - build-and-test:
+          filters: *master_filter
