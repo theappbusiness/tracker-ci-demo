@@ -35,19 +35,29 @@ jobs:
     steps:
       - build
       - run: npm test
-  publish_to_expo_dev:
+  publish-to-expo:
     executor: node
     working_directory: ~/covid-react
-    parameters:
-      release_channel:
-        description: Expo release channel
-        type: string
     steps:
       - build
       - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
-      - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel << parameters.release_channel >>
+      # - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
+  upload-android-apk:
+    executor: node
+    working_directory: ~/covid-react
+    steps:
+      # - run: npx expo-cli build:android --release-channel $RELEASE_CHANNEL --no-publish
+      - run: curl -o app.apk "$(npx expo-cli url:apk --non-interactive)"
+      - run: fastlane android $FASTLANE_LANE
 
 workflows:
+  test_all_pushes:
+    jobs:
+      - upload-android-apk:
+          context: dev
+          requires:
+            - build-and-test
+            - publish-to-expo
   build-and-test:
     jobs:
       - build-and-test:
@@ -56,11 +66,17 @@ workflows:
     jobs:
       - build-and-test:
           filters: *develop_filter
-      - publish_to_expo_dev:
+      - publish-to-expo:
           filters: *develop_filter
-          release_channel: dev
+          context: dev
           requires:
             - build-and-test
+      - upload-android-apk:
+          filters: *develop_filter
+          context: dev
+          requires:
+            - publish-to-expo
+
   master_deployment:
     jobs:
       - build-and-test:

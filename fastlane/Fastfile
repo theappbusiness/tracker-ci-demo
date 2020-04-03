@@ -1,0 +1,35 @@
+fastlane_version "2.144.0"
+
+# before_all do
+#   setup_circle_ci
+# end
+
+desc "iOS publishing lanes"
+platform :ios do
+  lane :dev do
+    puts "iOS Dev Channel (AppCenter)"
+  end
+
+  lane :stage do
+    puts "iOS Stage (TestFlight)"
+  end
+
+  lane :prodution do
+    puts "iOS Production (App Store)"
+  end
+end
+
+desc "Android related lanes, including beta and release"
+platform :android do
+  lane :dev do
+    puts "Android Dev Channel (AppCenter)"
+  end
+
+  lane :stage do
+    puts "Android Stage (Play Store Beta)"
+  end
+
+  lane :prodution do
+    puts "Android Production (Play Store)"
+  end
+end
