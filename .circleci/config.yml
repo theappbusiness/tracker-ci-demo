@@ -66,12 +66,12 @@ workflows:
       - build_and_test
       - deploy:
           context: dev
-          requires:
-            - build_and_test
-  build_and_test:
-    jobs:
-      - build_and_test:
-          filters: *feature_filter
+          # requires:
+          #   - build_and_test
+  # build_and_test:
+  #   jobs:
+  #     - build_and_test:
+  #         filters: *feature_filter
   dev_deployment:
     jobs:
       - build_and_test:
