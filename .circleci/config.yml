@@ -30,6 +30,18 @@ commands:
   login_to_expo:
     steps:
       - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD    
+  publish_to_expo:
+    steps:
+      - login_to_expo
+      # - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
+  upload_android_apk:
+    steps:
+      # - run: npx expo-cli build:android --release-channel $RELEASE_CHANNEL --no-publish
+      - run: curl -o app.apk "$(npx expo-cli url:apk --non-interactive)"
+      - run: fastlane android $FASTLANE_LANE
+      - store_artifacts:
+          path: ~/covid-react/app.apk
+  
 
 jobs:
   build_and_test:
@@ -38,34 +50,22 @@ jobs:
     steps:
       - build
       - run: npm test
-  publish_to_expo:
+  deploy:
     executor: node
     working_directory: ~/covid-react
     steps:
       - build
-      - login_to_expo
-      # - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
-  upload_android_apk:
-    executor: node
-    working_directory: ~/covid-react
-    steps:
-      - login_to_expo
-      # - run: npx expo-cli build:android --release-channel $RELEASE_CHANNEL --no-publish
-      - run: curl -o app.apk "$(npx expo-cli url:apk --non-interactive)"
-      - run: fastlane android $FASTLANE_LANE
+      - publish_to_expo
+      - upload_android_apk
 
 workflows:
   test_all_pushes:
     jobs:
       - build_and_test
-      - publish_to_expo:
+      - deploy:
           context: dev
           requires:
             - build_and_test
-      - upload_android_apk:
-          context: dev
-          requires:
-            - publish_to_expo
   build_and_test:
     jobs:
       - build_and_test:
@@ -74,16 +74,11 @@ workflows:
     jobs:
       - build_and_test:
           filters: *develop_filter
-      - publish_to_expo:
+      - deploy:
           filters: *develop_filter
           context: dev
           requires:
             - build_and_test
-      - upload_android_apk:
-          filters: *develop_filter
-          context: dev
-          requires:
-            - publish_to_expo
 
   master_deployment:
     jobs:
