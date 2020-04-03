@@ -26,6 +26,9 @@ commands:
   build:
     steps:
       - checkout
+      - run: gem install bundler
+      - run: bundle install
+      - run: bundle update fastlane
       - run: npm install 
   login_to_expo:
     steps:
