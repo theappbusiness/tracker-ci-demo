@@ -26,7 +26,10 @@ commands:
   build:
     steps:
       - checkout
-      - run: npm install      
+      - run: npm install 
+  login_to_expo:
+    steps:
+      - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD    
 
 jobs:
   build_and_test:
@@ -40,12 +43,13 @@ jobs:
     working_directory: ~/covid-react
     steps:
       - build
-      - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
+      - login_to_expo
       # - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
   upload_android_apk:
     executor: node
     working_directory: ~/covid-react
     steps:
+      - login_to_expo
       # - run: npx expo-cli build:android --release-channel $RELEASE_CHANNEL --no-publish
       - run: curl -o app.apk "$(npx expo-cli url:apk --non-interactive)"
       - run: fastlane android $FASTLANE_LANE
