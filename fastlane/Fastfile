@@ -21,8 +21,13 @@ end
 
 desc "Android related lanes, including beta and release"
 platform :android do
-  lane :dev do
-    puts "Android Dev Channel (AppCenter)"
+  desc "Android Dev Channel (AppCenter)"
+  lane :dev do |options|
+    appcenter_upload(
+      app_name: options[:app_name],
+      file: Dir.pwd + "../app.apk",
+      notify_testers: true, # Set to false if you don't want to notify testers of your new release (default: `false`)
+    )
   end
 
   lane :stage do
