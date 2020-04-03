@@ -35,14 +35,21 @@ commands:
   publish_to_expo:
     steps:
       - login_to_expo
-      # - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
-  upload_android_apk:
+      - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
+  deploy_android:
     steps:
-      # - run: npx expo-cli build:android --release-channel $RELEASE_CHANNEL --no-publish
+      - run: npx expo-cli build:android --release-channel $RELEASE_CHANNEL --no-publish
       - run: curl -o app.apk "$(npx expo-cli url:apk --non-interactive)"
-      - run: fastlane android $FASTLANE_LANE
+      - run: bundle exec fastlane android $FASTLANE_LANE
       - store_artifacts:
           path: ~/covid-react/app.apk
+  deploy_ios:
+    steps:
+      - run: npx expo-cli build:ios --release-channel $RELEASE_CHANNEL --non-interactive
+      - run: curl -o app.ipa "$(expo url:ipa --non-interactive)"
+      - run: bundle exec fastlane ios $FASTLANE_LANE
+      - store_artifacts:
+          path: ~/covid-react/app.ipa
   
 
 jobs:
@@ -58,7 +65,8 @@ jobs:
     steps:
       - build
       - publish_to_expo
-      - upload_android_apk
+      - deploy_android
+      - deploy_ios
 
 workflows:
   test_all_pushes:
