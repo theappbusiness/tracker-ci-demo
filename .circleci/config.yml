@@ -29,20 +29,20 @@ commands:
       - run: npm install      
 
 jobs:
-  build-and-test:
+  build_and_test:
     executor: node
     working_directory: ~/covid-react
     steps:
       - build
       - run: npm test
-  publish-to-expo:
+  publish_to_expo:
     executor: node
     working_directory: ~/covid-react
     steps:
       - build
       - run: npx expo-cli login -u $EXPO_USERNAME -p $EXPO_PASSWORD
       # - run: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $RELEASE_CHANNEL
-  upload-android-apk:
+  upload_android_apk:
     executor: node
     working_directory: ~/covid-react
     steps:
@@ -53,31 +53,35 @@ jobs:
 workflows:
   test_all_pushes:
     jobs:
-      - upload-android-apk:
+      - build_and_test
+      - publish_to_expo:
           context: dev
           requires:
-            - build-and-test
-            - publish-to-expo
-  build-and-test:
+            - build_and_test
+      - upload_android_apk:
+          context: dev
+          requires:
+            - publish_to_expo
+  build_and_test:
     jobs:
-      - build-and-test:
+      - build_and_test:
           filters: *feature_filter
   dev_deployment:
     jobs:
-      - build-and-test:
+      - build_and_test:
           filters: *develop_filter
-      - publish-to-expo:
-          filters: *develop_filter
-          context: dev
-          requires:
-            - build-and-test
-      - upload-android-apk:
+      - publish_to_expo:
           filters: *develop_filter
           context: dev
           requires:
-            - publish-to-expo
+            - build_and_test
+      - upload_android_apk:
+          filters: *develop_filter
+          context: dev
+          requires:
+            - publish_to_expo
 
   master_deployment:
     jobs:
-      - build-and-test:
+      - build_and_test:
           filters: *master_filter
