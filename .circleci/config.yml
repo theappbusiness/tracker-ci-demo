@@ -16,12 +16,11 @@ feature_filter: &feature_filter
 orbs:
   node: circleci/node@2.0.1
   slack: circleci/slack@3.2.0
-  ruby: circleci/ruby@0.2.1
 
 executors:
   node:
     docker:
-      - image: circleci/node:10.16
+      - image: circleci/ruby:latest-node
 
 commands:
   build:
